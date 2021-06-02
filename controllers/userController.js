@@ -6,21 +6,20 @@ import User from "../models/userModel.js";
 // @route   POST /api/users/login
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { phone, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ phone });
 
   if (user && (await user.matchPassword(password))) {
     res.json({
       _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
+      phone: user.phone,
+      role: user.role,
       token: generateToken(user._id),
     });
   } else {
     res.status(401);
-    throw new Error("Invalid email or password");
+    throw new Error("Invalid credentials");
   }
 });
 
@@ -28,9 +27,9 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { phone, password, role } = req.body;
 
-  const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ phone });
 
   if (userExists) {
     res.status(400);
@@ -38,17 +37,19 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    name,
-    email,
+    phone,
     password,
+    role:
+      role === "user" || role === "admin" || role === "diliveryPerson"
+        ? role
+        : "user",
   });
 
   if (user) {
     res.status(201).json({
       _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
+      phone: user.phone,
+      role: user.role,
       token: generateToken(user._id),
     });
   } else {
@@ -66,9 +67,8 @@ const getUserProfile = asyncHandler(async (req, res) => {
   if (user) {
     res.json({
       _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
+      phone: user.phone,
+      role: user.role,
     });
   } else {
     res.status(404);
@@ -76,4 +76,29 @@ const getUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-export { authUser, registerUser, getUserProfile };
+// @desc    list all users with role filter
+// @route   GET /api/users/all
+// @access  admin
+const getAllUsers = asyncHandler(async (req, res) => {
+  const filter = req.query.role;
+
+  if (filter) {
+    const users = await User.find({ role: filter });
+    if (users) {
+      res.json(users);
+    } else {
+      res.status(404);
+      throw new Error("No Found");
+    }
+  }
+  const allUsers = await User.find().select("-password");
+
+  if (allUsers) {
+    res.json(allUsers);
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
+});
+
+export { authUser, registerUser, getUserProfile, getAllUsers };

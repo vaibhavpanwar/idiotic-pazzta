@@ -30,4 +30,34 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { protect };
+const userOnly = (req, res, next) => {
+  if (req.user && (req.user.role === "admin" || req.user.role === "user")) {
+    next();
+  } else {
+    res.status(401);
+    throw new Error("Not authorized ");
+  }
+};
+
+const admin = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    next();
+  } else {
+    res.status(401);
+    throw new Error("Not authorized as an admin");
+  }
+};
+
+const diliveryAuth = (req, res, next) => {
+  if (
+    req.user &&
+    (req.user.role === "admin" || req.user.role === "diliveryPerson")
+  ) {
+    next();
+  } else {
+    res.status(401);
+    throw new Error("Not authorized as an admin or dilivery person");
+  }
+};
+
+export { protect, admin, diliveryAuth };

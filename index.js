@@ -3,10 +3,12 @@ import dotenv from "dotenv";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import connectDB from "./config/db.js";
 
+//env
+dotenv.config();
 //routes
 import userRoutes from "./routes/userRoutes.js";
-
-dotenv.config();
+import itemRoutes from "./routes/itemRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 
 connectDB();
 
@@ -16,6 +18,8 @@ app.use(express.json());
 
 //routes
 app.use("/api/users", userRoutes);
+app.use("/api/items", itemRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
